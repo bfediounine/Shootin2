@@ -25,13 +25,15 @@
 #define MAX_PROJECTILE		100
 #define PROJECTILE_SPEED	200000 // 200 ms
 
+// #define usleep(a) (sleep((double) a / 1000000)) 
+
 typedef struct projectileVals {
 	int x, y;
 	short dir;
 } projectileVals;
 
 pid_t actionProc;
-pthread_t *projectile[MAX_PROJECTILE];
+pthread_t projectile[MAX_PROJECTILE];
 u_char GAME_OVER;
 
 int knhit();

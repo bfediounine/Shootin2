@@ -52,7 +52,7 @@ void *smallProjectile(void *cPVals) {
 			limit = 0;
 			break;
 		default: 
-			printw("Invalid direction (smallProjectile())");	
+			perror("smallProjectile: switch(dir)");	
 			return NULL;
 			
 	}
@@ -61,19 +61,20 @@ void *smallProjectile(void *cPVals) {
 
 	if (dir & 1) {	//WEST or EAST
 		while ((x != limit) && !collision) { 
-			// T: WEST, F: EAST 
+			// clear former projectile location
+			mvprintw(y, x, " ");
+			// 1: WEST, 0: EAST 
 			x = (dir & 2) ? x - 1 : x + 1; 
 			mvprintw(y, x, ".");
-			// usleep(PROJECTILE_SPEED);
-			sleep(1);
+			usleep(PROJECTILE_SPEED);
 		}
 	} else {
 		while ((y != limit) && !collision) { 
-			// T: SOUTH F: NORTH
+			mvprintw(y, x, " ");
+			// 1: SOUTH 0: NORTH
 			y = (dir & 2) ? y + 1 : y - 1; 
 			mvprintw(y, x, ".");
-			// usleep(PROJECTILE_SPEED);
-			sleep(1);
+			usleep(PROJECTILE_SPEED);
 		}
 	}
 
@@ -123,12 +124,32 @@ void actionPoll(int startX, int startY, short startDir) {
 				case 'z':
 					curPVals = (projectileVals *)
 						malloc(sizeof(projectileVals));
-					curPVals->x = mainCharX + 1;
-					curPVals->y = mainCharY + 1;
-					curPVals->dir = mainCharDir;
-
-					if (pthread_create(projectile[threadCount++],
-						NULL, smallProjectile,
+					curPVals->dir = mainCharDir; 
+					switch(mainCharDir) // slightly redundant initialization 
+					{
+						case NORTH:
+							curPVals->x = mainCharX;
+							curPVals->y = mainCharY - 1;
+							break;
+						case EAST:
+							curPVals->x = mainCharX + 1;
+							curPVals->y = mainCharY;
+							break;
+						case SOUTH:
+							curPVals->x = mainCharX;
+							curPVals->y = mainCharY + 1;
+							break;
+						case WEST:
+							curPVals->x = mainCharX - 1;
+							curPVals->y = mainCharY;
+							break;
+						default:
+							perror("actionPoll: switch(curPress)");
+							exit(1);
+							break;
+					}
+					if (pthread_create(&projectile[threadCount++],
+						NULL, &smallProjectile,
 						(void *) curPVals) != 0) {
 						perror("pthread_create() error");
 						exit(1);
@@ -144,7 +165,6 @@ void actionPoll(int startX, int startY, short startDir) {
 		drawPlayField(NULL);	
 		drawMainChar(mainCharX, mainCharY, mainCharDir, 0);
 		refresh();
-
 	}
 }
 
@@ -196,7 +216,8 @@ int main() {
 	drawPlayField(NULL);
 	refresh();
 	// }
-	
+
+	srand(time(NULL));
 	actionProc = fork();
 	if (actionProc == 0) {
 		actionPoll(rand() % FIELD_X, rand() % FIELD_Y, (short) rand() % 4);
