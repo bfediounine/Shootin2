@@ -23,7 +23,7 @@
 #define WEST		3
 
 #define MAX_PROJECTILE		100
-#define PROJECTILE_SPEED	200000 // 200 ms
+#define PROJECTILE_SPEED	100000 // 100 ms
 
 // #define usleep(a) (sleep((double) a / 1000000)) 
 
@@ -31,6 +31,8 @@ typedef struct projectileVals {
 	int x, y;
 	short dir;
 } projectileVals;
+
+u_char field[FIELD_Y][FIELD_X];
 
 pid_t actionProc;
 pthread_t projectile[MAX_PROJECTILE];
@@ -40,7 +42,8 @@ int knhit();
 void nonblock(int);
 void *smallProjectile(void *);
 void actionPoll(int, int, short);
-void drawMainChar(int, int, short, short);
+void updateMainChar(int, int, short, short);
+void initPlayField(int map);
 void drawPlayField(void *state);
 
 #endif

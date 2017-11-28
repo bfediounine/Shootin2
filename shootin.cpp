@@ -62,18 +62,18 @@ void *smallProjectile(void *cPVals) {
 	if (dir & 1) {	//WEST or EAST
 		while ((x != limit) && !collision) { 
 			// clear former projectile location
-			mvprintw(y, x, " ");
+			field[y][x] = ' ';
 			// 1: WEST, 0: EAST 
 			x = (dir & 2) ? x - 1 : x + 1; 
-			mvprintw(y, x, ".");
+			field[y][x] = '.';
 			usleep(PROJECTILE_SPEED);
 		}
 	} else {
 		while ((y != limit) && !collision) { 
-			mvprintw(y, x, " ");
+			field[y][x] = ' ';
 			// 1: SOUTH 0: NORTH
 			y = (dir & 2) ? y + 1 : y - 1; 
-			mvprintw(y, x, ".");
+			field[y][x] = '.';
 			usleep(PROJECTILE_SPEED);
 		}
 	}
@@ -97,7 +97,7 @@ void actionPoll(int startX, int startY, short startDir) {
 
 	while (!GAME_OVER) {
 		threadCount = (threadCount == MAX_PROJECTILE) ? 0 : threadCount;
-		drawMainChar(mainCharX, mainCharY, mainCharDir, 1);
+		updateMainChar(mainCharX, mainCharY, mainCharDir, 1);
 		if (kbhit()) {
 			curPress = getch();
 			switch(curPress){
@@ -162,48 +162,67 @@ void actionPoll(int startX, int startY, short startDir) {
 			}
 		}
 		// once new coordinates have been determined, draw the screen
-		drawPlayField(NULL);	
-		drawMainChar(mainCharX, mainCharY, mainCharDir, 0);
+		// drawPlayField(NULL);	 
+		updateMainChar(mainCharX, mainCharY, mainCharDir, 0); 
 		refresh();
 	}
 }
 
-void drawMainChar(int x, int y, short dir, short clear) {
-	mvprintw(y, x, clear ? " " : "M");
+void updateMainChar(int x, int y, short dir, short clear) {
+	field[y][x] = (clear) ? ' ' : 'M';
+	field[y + (dir & 1) ? ((dir & 2) ? 1 : -1) : 0][x + (dir & 1) ? 0 : ((dir & 2) ? 1 : -1)] = (clear) ? ' ' :
+			((dir & 1) ? ((dir & 2) ? '-' : '^') : ((dir & 2) ? '<' : '>'));
+	/*
 	switch(dir) {
 		case NORTH: 	
-			mvprintw(y - 1, x, clear ? " " : "^");
+			field[y - 1][x] = (clear) ? " " : "^";
 			break;	
 		case EAST: 	
-			mvprintw(y, x + 1, clear ? " " : ">");
+			field[y][x + 1] = (clear) ? " " : ">";
 			break;
 		case SOUTH: 	
-			mvprintw(y + 1, x, clear ? " " : "_");
+			field[y + 1][x] = (clear) ? " " : "-";
 			break;
 		case WEST:	
-			mvprintw(y, x - 1, clear ? " " : "<");
+			field[y][x - 1] = (clear) ? " " : "<";
 			break;
 		default: 
 			printw("Invalid direction (smallProjectile())");	
 			return;
-	}
+	} */
 }
 
+// TODO: single function ON SOFTWARE TIMER (maybe?)
+// {
 void drawPlayField(void *state) {
 	int i = 0, j = 0;
 
 	if (state == NULL) {
-		for ( ; i < FIELD_X; i++) {
-			mvprintw(FIELD_Y - 1, i, "-");
-		}
-		for ( ; j < FIELD_Y; j++) {
-			mvprintw(j, i, "-");
-		}
+		for ( ; i < FIELD_X; i++)
+			for ( ; j < FIELD_Y; j++)
+				mvprintw(j, i, (char *) &field[j][i]);
 		GAME_OVER = 0;
 	} else {
 		// TODO: this will be changed later
 		drawPlayField(NULL);
 	}
+}
+// }
+
+void initPlayField(int map) {
+	// initialize barriers (map dependent) (TODO)
+	int i = 0, j = 0;
+	switch (map) {
+		case FALSE: // TEST MAP		
+			for ( ; i < FIELD_X; i++)
+				field[FIELD_Y - 1][i] = '-'; 
+			for ( ; j < FIELD_Y; j++)
+				field[j][i] = '-';
+			break;
+		default:
+			break;
+	}
+	// define maps as functions (TODO)
 }
 
 int main() {
@@ -213,7 +232,7 @@ int main() {
 	noecho();
 	nonblock(NB_ENABLE);
 	// while (1) {
-	drawPlayField(NULL);
+	initPlayField(FALSE);
 	refresh();
 	// }
 
@@ -231,5 +250,4 @@ int main() {
 
 	return 0;
 }
-
 
