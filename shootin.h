@@ -1,12 +1,16 @@
-#include <sys/types.h>
-#include <unistd.h>
-#include <pthread.h>
-#include <semaphore.h>
-#include <ncurses.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <termios.h>
 #include <errno.h>
+#include <ncurses.h>
+#include <pthread.h>
+#include <signal.h>
+#include <semaphore.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <termios.h>
+#include <time.h>
+#include <unistd.h>
 
 #ifndef SHOOTIN_H_
 #define SHOOTIN_H_
@@ -22,8 +26,9 @@
 #define SOUTH		2
 #define WEST		3
 
+#define REFRESH_RATE		16666667	// 60 FPS (1/60 = 16.6k usecs)
 #define MAX_PROJECTILE		100
-#define PROJECTILE_SPEED	100000 // 100 ms
+#define PROJECTILE_SPEED	100000  	// 100 ms
 
 // #define usleep(a) (sleep((double) a / 1000000)) 
 
@@ -44,6 +49,6 @@ void *smallProjectile(void *);
 void actionPoll(int, int, short);
 void updateMainChar(int, int, short, short);
 void initPlayField(int map);
-void drawPlayField(void *state);
+void drawPlayField(int signum);
 
 #endif

@@ -2,7 +2,7 @@ export CFLAGS = "-Wno-error"
 NAME=shootin
 
 shootin: $(NAME).h
-	g++ -g -o $(NAME).exe $(NAME).cpp -lncurses -lpthread
+	g++ -g -o -fpermissive $(NAME).exe $(NAME).cpp -lncurses -lpthread -lrt
 
 
 IGNORE: clean
