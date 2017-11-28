@@ -37,11 +37,13 @@ typedef struct projectileVals {
 	short dir;
 } projectileVals;
 
+WINDOW *gameWindow;
 u_char field[FIELD_Y][FIELD_X];
 
 pid_t actionProc;
 pthread_t projectile[MAX_PROJECTILE];
 u_char GAME_OVER;
+int TEST_MUTABLE; // mutable, test only
 
 int knhit();
 void nonblock(int);
