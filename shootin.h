@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <sys/mman.h>
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
@@ -31,14 +32,14 @@
 #define PROJECTILE_SPEED	100000  	// 100 ms
 
 // #define usleep(a) (sleep((double) a / 1000000)) 
+#define coord(y, x) (sizeof(u_char) * y + x)
 
 typedef struct projectileVals {
 	int x, y;
 	short dir;
 } projectileVals;
 
-WINDOW *gameWindow;
-u_char field[FIELD_Y][FIELD_X];
+static u_char *field; // SHARED FIELD (between game loop and field draw)
 
 pid_t actionProc;
 pthread_t projectile[MAX_PROJECTILE];

@@ -82,39 +82,38 @@ void *smallProjectile(void *cPVals)
 			break;
 		case EAST: 
 			limit = FIELD_X;
-			break;
+			break; 
 		case SOUTH: 
-			limit = 0;
-			break;
+			limit = 0; 
+			break; 
 		case WEST: 
-			limit = 0;
-			break;
+			limit = 0; 
+			break; 
 		default: 
 			perror("smallProjectile: switch(dir)");	
-			return NULL;
-			
-	}
-
-	mvprintw(1, 1, "TEST: %d", dir);
-
+			return NULL; 
+	} 
+	
+	mvprintw(1, 1, "TEST: %d", dir); 
+	
 	if (dir & 1) //WEST or EAST
 	{			
 		while ((x != limit) && !collision)
 		{ 
 			// clear former projectile location
-			field[y][x] = ' ';
+			field[coord(y, x)] = ' ';
 			// 1: WEST, 0: EAST 
 			x = (dir & 2) ? x - 1 : x + 1; 
-			field[y][x] = '.';
+			field[coord(y, x)] = '.';
 			usleep(PROJECTILE_SPEED);
 		}
 	} else {
 		while ((y != limit) && !collision)
 		{ 
-			field[y][x] = ' ';
+			field[coord(y, x)] = ' ';
 			// 1: SOUTH 0: NORTH
 			y = (dir & 2) ? y + 1 : y - 1; 
-			field[y][x] = '.';
+			field[coord(y, x)] = '.';
 			usleep(PROJECTILE_SPEED);
 		}
 	}
@@ -215,7 +214,7 @@ void actionPoll(int startX, int startY, short startDir)
 
 void updateMainChar(int x, int y, short dir, short clear)
 {
-	field[y][x] = 'M';
+	field[coord(y, x)] = 'M';
 	/* field[y][x] = (clear) ? ' ' : 'M';
 	field[y + (dir & 1) ? ((dir & 2) ? 1 : -1) : 0][x + (dir & 1) ? 0 : ((dir & 2) ? 1 : -1)] = (clear) ? ' ' :
 			((dir & 1) ? ((dir & 2) ? '-' : '^') : ((dir & 2) ? '<' : '>')); */
@@ -230,10 +229,10 @@ void drawPlayField(int signum)
 	// printf("SIGNAL %d", signum);
 	for ( ; j < FIELD_Y; j++)
 		for (i = 0; i < FIELD_X; i++)
-			mvprintw(j, i, "%c", field[j][i]);
+			mvprintw(j, i, "%c", field[coord(j, i)]);
 		//	mvprintw(j, i, "+");
 	// printw("TEST MUTABLE: %d", TEST_MUTABLE++);
-	mvprintw(FIELD_Y - 1, FIELD_X - 1, "Field @ FIELD_Y - 1, FIELD_X - 1: %c", field[FIELD_Y - 1][FIELD_X - 1]);
+	mvprintw(FIELD_Y - 1, FIELD_X - 1, "Field @ FIELD_Y - 1, FIELD_X - 1: %c", field[coord(FIELD_Y - 1, FIELD_X - 1)]);
 	refresh();
 }
 // }
@@ -246,9 +245,9 @@ void initPlayField(int map)
 	{
 		case FALSE: // TEST MAP		
 			for ( ; i < FIELD_X; i++)
-				field[FIELD_Y - 1][i] = '-'; 
+				field[coord(FIELD_Y - 1, i)] = '-'; 
 			for ( ; j < FIELD_Y; j++)
-				field[j][FIELD_X - 1] = '-';
+				field[coord(j, FIELD_X - 1)] = '-';
 			break;
 		default:
 			break;
@@ -260,11 +259,18 @@ int main()
 {
 	TEST_MUTABLE = 0;
 
+	// initiate ncurses values
 	initscr();
 	cbreak();
 	keypad(stdscr, TRUE);
 	noecho();
 	nonblock(NB_ENABLE);
+	// instantiate shared memory
+	field = (u_char *) mmap(NULL, sizeof(u_char) * FIELD_Y * FIELD_X, 
+			PROT_READ | PROT_WRITE,
+			MAP_SHARED | MAP_ANONYMOUS, 
+			-1, 0);
+
 	// while (1) 
 	// {
 	initPlayField(FALSE);
@@ -283,6 +289,7 @@ int main()
 		while (1);
 	}
 
+	munmap(field, sizeof(field));
 	nonblock(NB_DISABLE);	
 	endwin();
 
