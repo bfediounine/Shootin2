@@ -32,7 +32,7 @@
 #define PROJECTILE_SPEED	100000  	// 100 ms
 
 // #define usleep(a) (sleep((double) a / 1000000)) 
-#define coord(y, x) (sizeof(u_char) * y + x)
+#define coord(y, x) (FIELD_Y * y + x)
 
 typedef struct projectileVals {
 	int x, y;

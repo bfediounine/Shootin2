@@ -56,8 +56,8 @@ void set_timer(double nsecs)
         timer.it_value.tv_sec = 0;
         timer.it_value.tv_nsec = 100;
         /* ... and every 1 sec after that. */
-        timer.it_interval.tv_sec = 1;
-        timer.it_interval.tv_nsec = 0;
+        timer.it_interval.tv_sec = 0;
+        timer.it_interval.tv_nsec = nsecs;
         /* Start a virtual timer. It counts down whenever this process is
         *    executing. */
 
@@ -228,10 +228,12 @@ void drawPlayField(int signum)
 
 	// printf("SIGNAL %d", signum);
 	for ( ; j < FIELD_Y; j++)
-		for (i = 0; i < FIELD_X; i++)
+		for (i = 0; i < FIELD_X; i++) {
 			mvprintw(j, i, "%c", field[coord(j, i)]);
-		//	mvprintw(j, i, "+");
+			// mvprintw(j, i, "+");
+		}
 	// printw("TEST MUTABLE: %d", TEST_MUTABLE++);
+	// mvprintw(FIELD_Y - 1, 0, "%c", field[coord(FIELD_Y - 1, 0)]);
 	mvprintw(FIELD_Y - 1, FIELD_X - 1, "Field @ FIELD_Y - 1, FIELD_X - 1: %c", field[coord(FIELD_Y - 1, FIELD_X - 1)]);
 	refresh();
 }
@@ -259,7 +261,7 @@ int main()
 {
 	TEST_MUTABLE = 0;
 
-	// initiate ncurses values
+	// initiate ncurses 0ialues
 	initscr();
 	cbreak();
 	keypad(stdscr, TRUE);
@@ -270,11 +272,11 @@ int main()
 			PROT_READ | PROT_WRITE,
 			MAP_SHARED | MAP_ANONYMOUS, 
 			-1, 0);
+	bzero(field, sizeof(field));
 
 	// while (1) 
 	// {
 	initPlayField(FALSE);
-	set_timer(REFRESH_RATE);
 	// }
 
 	srand(time(NULL));
@@ -286,6 +288,7 @@ int main()
 	} 
 	else 
 	{
+		set_timer(REFRESH_RATE);
 		while (1);
 	}
 
