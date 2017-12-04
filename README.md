@@ -1,5 +1,5 @@
-#Rootin' Tootin' Saloon Shootin'
-##Libraries
+# Rootin' Tootin' Saloon Shootin'
+## Libraries
 ncurses, Boost.ASIO
-##Description
+## Description
 A horde-mode ASCII shooter with multiplayer capabilities.
