@@ -32,7 +32,7 @@
 #define PROJECTILE_SPEED	100000  	// 100 ms
 
 // #define usleep(a) (sleep((double) a / 1000000)) 
-#define coord(y, x) (FIELD_Y * y + x)
+#define coord(y, x) (FIELD_X * y + x)
 
 typedef struct projectileVals {
 	int x, y;
@@ -50,7 +50,7 @@ int knhit();
 void nonblock(int);
 void *smallProjectile(void *);
 void actionPoll(int, int, short);
-void updateMainChar(int, int, short, short);
+void updateMainChar(int, int, int, int, short);
 void initPlayField(int map);
 void drawPlayField(int signum);
 

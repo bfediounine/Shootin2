@@ -134,13 +134,15 @@ void actionPoll(int startX, int startY, short startDir)
 	projectileVals *curPVals;
 
 	// external values
-	int mainCharX = startX, mainCharY = startY;
+	int mainCharX = startX, mainCharY = startY, 
+	    mainCharPrvX = startX, mainCharPrvY = startY;
 	short mainCharDir = startDir;
 
 	while (!GAME_OVER)
 	{
 		threadCount = (threadCount == MAX_PROJECTILE) ? 0 : threadCount;
-		updateMainChar(mainCharX, mainCharY, mainCharDir, 1);
+	    	mainCharPrvY = mainCharY;
+		mainCharPrvX = mainCharX;
 		if (kbhit())
 		{
 			curPress = getch();
@@ -208,16 +210,17 @@ void actionPoll(int startX, int startY, short startDir)
 		}
 		// once new coordinates have been determined, draw the screen
 		// drawPlayField(NULL);	 
-		updateMainChar(mainCharX, mainCharY, mainCharDir, 0); 
+		updateMainChar(mainCharX, mainCharY, mainCharPrvX, mainCharPrvY, mainCharDir); 
 	}
 }
 
-void updateMainChar(int x, int y, short dir, short clear)
+void updateMainChar(int x, int y, int prvX, int prvY, short dir)
 {
+	// field[coord(y, x)] = 'M';
+	field[coord(prvY, prvX)] = ' ';
 	field[coord(y, x)] = 'M';
-	/* field[y][x] = (clear) ? ' ' : 'M';
-	field[y + (dir & 1) ? ((dir & 2) ? 1 : -1) : 0][x + (dir & 1) ? 0 : ((dir & 2) ? 1 : -1)] = (clear) ? ' ' :
-			((dir & 1) ? ((dir & 2) ? '-' : '^') : ((dir & 2) ? '<' : '>')); */
+//	field[coord(y + (dir & 1) ? ((dir & 2) ? 1 : -1) : 0, x + (dir & 1) ? 0 : ((dir & 2) ? 1 : -1))] = (clear) ? ' ' :
+//			((dir & 1) ? ((dir & 2) ? '-' : '^') : ((dir & 2) ? '<' : '>'));
 }
 
 // TODO: single function ON SOFTWARE TIMER (maybe?)
@@ -228,7 +231,8 @@ void drawPlayField(int signum)
 
 	// printf("SIGNAL %d", signum);
 	for ( ; j < FIELD_Y; j++)
-		for (i = 0; i < FIELD_X; i++) {
+		for (i = 0; i < FIELD_X; i++) 
+		{
 			mvprintw(j, i, "%c", field[coord(j, i)]);
 			// mvprintw(j, i, "+");
 		}
@@ -270,9 +274,9 @@ int main()
 	// instantiate shared memory
 	field = (u_char *) mmap(NULL, sizeof(u_char) * FIELD_Y * FIELD_X, 
 			PROT_READ | PROT_WRITE,
-			MAP_SHARED | MAP_ANONYMOUS, 
+			MAP_SHARED | MAP_ANONYMOUS,
 			-1, 0);
-	bzero(field, sizeof(field));
+	memset(field, ' ', sizeof(field));
 
 	// while (1) 
 	// {
@@ -289,7 +293,7 @@ int main()
 	else 
 	{
 		set_timer(REFRESH_RATE);
-		while (1);
+		while(1);
 	}
 
 	munmap(field, sizeof(field));
