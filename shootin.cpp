@@ -136,13 +136,14 @@ void actionPoll(int startX, int startY, short startDir)
 	// external values
 	int mainCharX = startX, mainCharY = startY, 
 	    mainCharPrvX = startX, mainCharPrvY = startY;
-	short mainCharDir = startDir;
+	short mainCharDir = startDir, mainCharPrvDir = startDir;
 
 	while (!GAME_OVER)
 	{
 		threadCount = (threadCount == MAX_PROJECTILE) ? 0 : threadCount;
 	    	mainCharPrvY = mainCharY;
 		mainCharPrvX = mainCharX;
+		mainCharPrvDir = mainCharDir;
 		if (kbhit())
 		{
 			curPress = getch();
@@ -210,18 +211,38 @@ void actionPoll(int startX, int startY, short startDir)
 		}
 		// once new coordinates have been determined, draw the screen
 		// drawPlayField(NULL);	 
-		updateMainChar(mainCharX, mainCharY, mainCharPrvX, mainCharPrvY, mainCharDir); 
+		updateMainChar(mainCharX, mainCharY, mainCharPrvX, mainCharPrvY, mainCharDir, mainCharPrvDir); 
 	}
 }
 
-void updateMainChar(int x, int y, int prvX, int prvY, short dir)
+void updateMainChar(int x, int y, int prvX, int prvY, short dir, short prvDir)
 {
-	// field[coord(y, x)] = 'M';
 	field[coord(prvY, prvX)] = ' ';
-	field[coord(y, x)] = 'M';
-//	field[coord(y + (dir & 1) ? ((dir & 2) ? 1 : -1) : 0, x + (dir & 1) ? 0 : ((dir & 2) ? 1 : -1))] = (clear) ? ' ' :
-//			((dir & 1) ? ((dir & 2) ? '-' : '^') : ((dir & 2) ? '<' : '>'));
+	// field[coord(y, x)] = 'M';
+	field[coord(y, x)] = dir + '0';
+	// field[coord(prvY + (prvDir & 1)
+	field[coord(y + ((dir & 1) ? 0 : ((dir & 2) ? 1 : -1)), x + ((dir & 1) ? ((dir & 2) ? -1 : 1) : 0))] = 
+			((dir & 1) ? ((dir & 2) ? '<' : '>') : ((dir & 2) ? '-' : '^'));
+	// switch (dir)
+	// {
+	// 	case NORTH:
+	// 		field[coord(y - 1, x)] = '^';
+	// 		break;
+	// 	case EAST:
+	// 		field[coord(y, x + 1)] = '>';
+	// 		break;
+	// 	case SOUTH:
+	// 		field[coord(y + 1, x)] = '-';
+	// 		break;
+	// 	case WEST:
+	// 		field[coord(y, x - 1)] = '<';
+	// 		break;
+	// 	default:
+	// 		break;
+	// }
+
 }
+	
 
 // TODO: single function ON SOFTWARE TIMER (maybe?)
 // {
@@ -234,7 +255,7 @@ void drawPlayField(int signum)
 		for (i = 0; i < FIELD_X; i++) 
 		{
 			mvprintw(j, i, "%c", field[coord(j, i)]);
-			// mvprintw(j, i, "+");
+			// mvprintw(0, 0, "%d", coord(0, 0));
 		}
 	// printw("TEST MUTABLE: %d", TEST_MUTABLE++);
 	// mvprintw(FIELD_Y - 1, 0, "%c", field[coord(FIELD_Y - 1, 0)]);
@@ -276,17 +297,18 @@ int main()
 			PROT_READ | PROT_WRITE,
 			MAP_SHARED | MAP_ANONYMOUS,
 			-1, 0);
+	// field = (u_char *) malloc(sizeof(u_char) * FIELD_Y * FIELD_X);
 	memset(field, ' ', sizeof(field));
 
 	// while (1) 
 	// {
-	initPlayField(FALSE);
 	// }
 
 	srand(time(NULL));
 	actionProc = fork();
 	if (actionProc == 0) 
 	{
+		initPlayField(FALSE);
 		actionPoll(rand() % FIELD_X, rand() % FIELD_Y, (short) rand() % 4);
 		exit(0);
 	} 

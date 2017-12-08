@@ -50,7 +50,7 @@ int knhit();
 void nonblock(int);
 void *smallProjectile(void *);
 void actionPoll(int, int, short);
-void updateMainChar(int, int, int, int, short);
+void updateMainChar(int, int, int, int, short, short);
 void initPlayField(int map);
 void drawPlayField(int signum);
 
