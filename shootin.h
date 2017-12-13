@@ -21,8 +21,8 @@
 #define NB_ENABLE	1
 #define NB_DISABLE	0
 
-#define START_X		0  	// hardcoded window start coods
-#define START_Y		0
+#define START_X		1  	// hardcoded window start coods
+#define START_Y		1
 
 #define TEST_X		50
 #define TEST_Y		10
@@ -37,7 +37,8 @@
 #define PROJECTILE_SPEED	100000  	// 100 ms
 
 // #define usleep(a) (sleep((double) a / 1000000)) 
-#define coord(y, x) (TEST_X * (y) + x)  // TODO TODO TODO
+#define COORD(y, x) (TEST_X * (y) + x)  // TODO TODO TODO
+#define COORD_CHK(y, x, dir) (COORD(y + ((dir & 1) ? 0 : ((dir & 2) ? 1 : -1)), x + ((dir & 1) ? ((dir & 2) ? -1 : 1) : 0)))
 // static int coord(int y, int x) { return FIELD_X * y + x; }
 
 typedef struct projectileVals {

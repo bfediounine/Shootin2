@@ -64,7 +64,7 @@ void set_timer(double nsecs)
 	timer_settime(timerid, 0, &timer, NULL);
 }
 
-// Pass by value as character coordinates mustn't be modified
+// Pass by value as character COORDinates mustn't be modified
 void *smallProjectile(void *cPVals) 
 {
 	int x = ((projectileVals *) cPVals)->x, 
@@ -93,28 +93,28 @@ void *smallProjectile(void *cPVals)
 			return NULL; 
 	} 
 	
-	mvprintw(1, 1, "TEST: %d", dir); 
-	
 	if (dir & 1) //WEST or EAST
 	{			
-		while ((x != limit) && !collision)
+		do
 		{ 
 			// clear former projectile location
-			field[coord(y, x)] = ' ';
+			field[COORD(y, x)] = ' ';
 			// 1: WEST, 0: EAST 
 			x = (dir & 2) ? x - 1 : x + 1; 
-			field[coord(y, x)] = '.';
+			field[COORD(y, x)] = '.';
 			usleep(PROJECTILE_SPEED);
 		}
+		while ((x != limit) && !collision);
 	} else {
-		while ((y != limit) && !collision)
+		do
 		{ 
-			field[coord(y, x)] = ' ';
+			field[COORD(y, x)] = ' ';
 			// 1: SOUTH 0: NORTH
 			y = (dir & 2) ? y + 1 : y - 1; 
-			field[coord(y, x)] = '.';
+			field[COORD(y, x)] = '.';
 			usleep(PROJECTILE_SPEED);
 		}
+		while ((y != limit) && !collision);
 	}
 
 	pthread_exit(NULL);
@@ -122,6 +122,8 @@ void *smallProjectile(void *cPVals)
 
 int collisionCheck(int x, int y, short dir)
 {
+	if (field[COORD_CHK(y, x, dir)] != ' ')
+		return 0;
 	return 1;
 }
 
@@ -151,22 +153,22 @@ void actionPoll(int startX, int startY, short startDir)
 				case KEY_UP: 
 					if (collisionCheck(mainCharX, mainCharY - 1, NORTH))
 						mainCharY--;
-						mainCharDir = NORTH;
+					mainCharDir = NORTH;
 					break;
 				case KEY_DOWN:
-					if (collisionCheck(mainCharX, mainCharY + 1, NORTH))
+					if (collisionCheck(mainCharX, mainCharY + 1, SOUTH))
 						mainCharY++;
-						mainCharDir = SOUTH;
+					mainCharDir = SOUTH;
 					break;
 				case KEY_LEFT:
-					if (collisionCheck(mainCharX - 1, mainCharY, NORTH))
+					if (collisionCheck(mainCharX - 1, mainCharY, WEST))
 						mainCharX--;	
-						mainCharDir = WEST;
+					mainCharDir = WEST;
 					break;
 				case KEY_RIGHT:
-					if (collisionCheck(mainCharX - 1, mainCharY, NORTH))
+					if (collisionCheck(mainCharX + 1, mainCharY, EAST))
 						mainCharX++;
-						mainCharDir = EAST;
+					mainCharDir = EAST;
 					break;
 				case 'z':
 					curPVals = (projectileVals *)
@@ -212,7 +214,7 @@ void actionPoll(int startX, int startY, short startDir)
 					break;
 			}
 		}
-		// once new coordinates have been determined, draw the screen
+		// once new COORDinates have been determined, draw the screen
 		// drawPlayField(NULL);	 
 		updateMainChar(mainCharX, mainCharY, mainCharPrvX, mainCharPrvY, mainCharDir, mainCharPrvDir); 
 	}
@@ -220,35 +222,28 @@ void actionPoll(int startX, int startY, short startDir)
 
 void updateMainChar(int x, int y, int prvX, int prvY, short dir, short prvDir)
 {
-	field[coord(prvY, prvX)] = ' ';
-	field[coord(y, x)] = 'M';
-	// field[coord(prvY + (prvDir & 1)
-	field[coord(y + ((dir & 1) ? 0 : ((dir & 2) ? 1 : -1)), x + ((dir & 1) ? ((dir & 2) ? -1 : 1) : 0))] = 
-			((dir & 1) ? ((dir & 2) ? '<' : '>') : ((dir & 2) ? '-' : '^'));
+	field[COORD(prvY, prvX)] = ' ';
+	field[COORD(y, x)] = 'M';
+	field[COORD_CHK(prvY, prvX, prvDir)] = ' ';
+	field[COORD_CHK(y, x, dir)] = (dir & 1) ? ((dir & 2) ? '<' : '>') : ((dir & 2) ? '-' : '^');
 }
 	
-
-// TODO: single function ON SOFTWARE TIMER (maybe?)
-// {
 void drawPlayField(int signum) 
 {
 	int i, j = 0;
 
 	wnoutrefresh(window);
 	// printf("SIGNAL %d", signum);
+	wborder(window, '|', '|', '-', '-', '+', '+', '+', '+');
 	for ( ; j < TEST_Y; j++)
 		for (i = 0; i < TEST_X; i++) 
-		{
-			mvwprintw(window, j, i, "%c", field[coord(j, i)]);
-			// mvprintw(0, 0, "%d", coord(0, 0));
-		}
+			mvwprintw(window, START_Y + j, START_X + i, 
+					"%c", field[COORD(j, i)]);
 	// printw("TEST MUTABLE: %d", TEST_MUTABLE++);
-	// mvprintw(TEST_Y - 1, 0, "%c", field[coord(TEST_Y - 1, 0)]);
-	mvwprintw(window, TEST_Y - 1, TEST_X - 1, "Field @ TEST_Y - 1, TEST_X - 1: %c", field[coord(TEST_Y - 1, TEST_X - 1)]);
-	mvwprintw(window, TEST_Y - 2, TEST_X - 1, "Current field adx: %d", &field);
+	// mvwprintw(window, TEST_Y - 1, TEST_X - 1, "Field @ TEST_Y - 1, TEST_X - 1: %c", field[COORD(TEST_Y - 1, TEST_X - 1)]);
+	// mvwprintw(window, TEST_Y - 2, TEST_X - 1, "Current field adx: %d", &field);
 	doupdate();
 }
-// }
 
 void initPlayField(int map) 
 {
@@ -258,9 +253,9 @@ void initPlayField(int map)
 	{
 		case FALSE: // TEST MAP		
 			for ( ; i < TEST_X; i++)
-				field[coord(TEST_Y - 1, i)] = '-'; 
+				field[COORD(TEST_Y - 1, i)] = '-'; 
 			for ( ; j < TEST_Y; j++)
-				field[coord(j, TEST_X - 1)] = '-';
+				field[COORD(j, TEST_X - 1)] = '-';
 			break;
 		default:
 			break;
@@ -296,7 +291,7 @@ int main(int argc, char *argv[1])
 {
 	GAME_OVER = 0;
 	TEST_MUTABLE = 0;	
-	int winwidth, winheight;
+	int winwidth, winheight, fieldsize;
 
 	// check parameters
 	if (argc != 2)
@@ -338,11 +333,12 @@ int main(int argc, char *argv[1])
 	refresh();
 
 	// instantiate shared memory
-	field = (u_char *) mmap(NULL, sizeof(u_char) * winwidth * winheight,
+	fieldsize = sizeof(u_char) * winwidth * winheight;
+	field = (u_char *) mmap(NULL, (size_t) fieldsize,
 			PROT_READ | PROT_WRITE,
 			MAP_SHARED | MAP_ANONYMOUS,
 			-1, 0);
-	memset(field, ' ', sizeof(field));
+	memset(field, ' ', (size_t) fieldsize);
 
 	// set new rseed, split draw/calculation processes, begin
 	srand(time(NULL));
