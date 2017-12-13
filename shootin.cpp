@@ -36,10 +36,9 @@ void nonblock(int state)
 
 void set_timer(double nsecs) 
 { 
-	timer_t timerid;
 	struct sigevent sevp;
 	struct sigaction sa;
-        struct itimerspec timer;
+	struct itimerspec timer;
 
         /* Install timer_handler as the signal handler for SIGVTALRM. */
         memset(&sevp, 0, sizeof(struct sigevent));
@@ -78,10 +77,10 @@ void *smallProjectile(void *cPVals)
 	switch (dir) 
 	{
 		case NORTH: 
-			limit = FIELD_Y;
+			limit = TEST_Y;
 			break;
 		case EAST: 
-			limit = FIELD_X;
+			limit = TEST_X;
 			break; 
 		case SOUTH: 
 			limit = 0; 
@@ -146,8 +145,9 @@ void actionPoll(int startX, int startY, short startDir)
 		mainCharPrvDir = mainCharDir;
 		if (kbhit())
 		{
-			curPress = getch();
-			switch(curPress){
+			curPress = wgetch(window);
+			switch(curPress)
+			{
 				case KEY_UP: 
 					if (collisionCheck(mainCharX, mainCharY - 1, NORTH))
 						mainCharY--;
@@ -205,6 +205,9 @@ void actionPoll(int startX, int startY, short startDir)
 					break;
 				case 'x':
 					break;
+				case KEY_BACKSPACE:
+					kill((pid_t) ((int) getpid() - 1), GO_SIG); // send to parent signal informing of termination
+					exit(0); // end process on escape
 				default:
 					break;
 			}
@@ -218,29 +221,10 @@ void actionPoll(int startX, int startY, short startDir)
 void updateMainChar(int x, int y, int prvX, int prvY, short dir, short prvDir)
 {
 	field[coord(prvY, prvX)] = ' ';
-	// field[coord(y, x)] = 'M';
-	field[coord(y, x)] = dir + '0';
+	field[coord(y, x)] = 'M';
 	// field[coord(prvY + (prvDir & 1)
 	field[coord(y + ((dir & 1) ? 0 : ((dir & 2) ? 1 : -1)), x + ((dir & 1) ? ((dir & 2) ? -1 : 1) : 0))] = 
 			((dir & 1) ? ((dir & 2) ? '<' : '>') : ((dir & 2) ? '-' : '^'));
-	// switch (dir)
-	// {
-	// 	case NORTH:
-	// 		field[coord(y - 1, x)] = '^';
-	// 		break;
-	// 	case EAST:
-	// 		field[coord(y, x + 1)] = '>';
-	// 		break;
-	// 	case SOUTH:
-	// 		field[coord(y + 1, x)] = '-';
-	// 		break;
-	// 	case WEST:
-	// 		field[coord(y, x - 1)] = '<';
-	// 		break;
-	// 	default:
-	// 		break;
-	// }
-
 }
 	
 
@@ -250,17 +234,19 @@ void drawPlayField(int signum)
 {
 	int i, j = 0;
 
+	wnoutrefresh(window);
 	// printf("SIGNAL %d", signum);
-	for ( ; j < FIELD_Y; j++)
-		for (i = 0; i < FIELD_X; i++) 
+	for ( ; j < TEST_Y; j++)
+		for (i = 0; i < TEST_X; i++) 
 		{
-			mvprintw(j, i, "%c", field[coord(j, i)]);
+			mvwprintw(window, j, i, "%c", field[coord(j, i)]);
 			// mvprintw(0, 0, "%d", coord(0, 0));
 		}
 	// printw("TEST MUTABLE: %d", TEST_MUTABLE++);
-	// mvprintw(FIELD_Y - 1, 0, "%c", field[coord(FIELD_Y - 1, 0)]);
-	mvprintw(FIELD_Y - 1, FIELD_X - 1, "Field @ FIELD_Y - 1, FIELD_X - 1: %c", field[coord(FIELD_Y - 1, FIELD_X - 1)]);
-	refresh();
+	// mvprintw(TEST_Y - 1, 0, "%c", field[coord(TEST_Y - 1, 0)]);
+	mvwprintw(window, TEST_Y - 1, TEST_X - 1, "Field @ TEST_Y - 1, TEST_X - 1: %c", field[coord(TEST_Y - 1, TEST_X - 1)]);
+	mvwprintw(window, TEST_Y - 2, TEST_X - 1, "Current field adx: %d", &field);
+	doupdate();
 }
 // }
 
@@ -271,10 +257,10 @@ void initPlayField(int map)
 	switch (map) 
 	{
 		case FALSE: // TEST MAP		
-			for ( ; i < FIELD_X; i++)
-				field[coord(FIELD_Y - 1, i)] = '-'; 
-			for ( ; j < FIELD_Y; j++)
-				field[coord(j, FIELD_X - 1)] = '-';
+			for ( ; i < TEST_X; i++)
+				field[coord(TEST_Y - 1, i)] = '-'; 
+			for ( ; j < TEST_Y; j++)
+				field[coord(j, TEST_X - 1)] = '-';
 			break;
 		default:
 			break;
@@ -282,45 +268,108 @@ void initPlayField(int map)
 	// define maps as functions (TODO)
 }
 
-int main() 
+// provided ncruses sample code////////////////////////////////////
+WINDOW *create_newwin(int height, int width, int starty, int startx)
 {
-	TEST_MUTABLE = 0;
+	WINDOW *local_win;
 
-	// initiate ncurses 0ialues
+	local_win = newwin(height, width, starty, startx);
+	wborder(local_win, '|', '|', '-', '-', '+', '+', '+', '+');
+	wrefresh(local_win);
+	return local_win;
+}
+
+void destroy_win(WINDOW *local_win)
+{
+	wborder(local_win, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
+	wrefresh(local_win);
+	delwin(window);
+}
+//////////////////////////////////////////////////////////////////
+
+void set_goflag(int signum)
+{
+	GAME_OVER = 1;
+}
+
+int main(int argc, char *argv[1]) 
+{
+	GAME_OVER = 0;
+	TEST_MUTABLE = 0;	
+	int winwidth, winheight;
+
+	// check parameters
+	if (argc != 2)
+	{
+		perror("Usage: ./shootin [-s -m -l]");
+		exit(1);
+	}
+
+	switch (argv[1][1])
+	{
+		case 's':
+			winwidth = 100;
+			winheight = 100;
+			break;
+		case 'm':
+			winwidth = 200;
+			winheight = 200;
+		       	break;
+		case 'f':
+			winwidth = 300;
+			winheight = 300;
+			break;
+		case 't': // test case
+			winwidth = TEST_X;
+			winheight = TEST_Y;
+			break;
+		default:
+			perror("Usage: ./shootin [-s -m -l]");
+			exit(1);
+	}
+	// initiate game window
 	initscr();
+	window = create_newwin(winheight, winwidth, START_X, START_Y);
+	// initiate ncurses values
 	cbreak();
-	keypad(stdscr, TRUE);
-	noecho();
+	keypad(window, TRUE);
+	echo(); // TODO: ...how in the hell does this work?????
 	nonblock(NB_ENABLE);
+	refresh();
+
 	// instantiate shared memory
-	field = (u_char *) mmap(NULL, sizeof(u_char) * FIELD_Y * FIELD_X, 
+	field = (u_char *) mmap(NULL, sizeof(u_char) * winwidth * winheight,
 			PROT_READ | PROT_WRITE,
 			MAP_SHARED | MAP_ANONYMOUS,
 			-1, 0);
-	// field = (u_char *) malloc(sizeof(u_char) * FIELD_Y * FIELD_X);
 	memset(field, ' ', sizeof(field));
 
-	// while (1) 
-	// {
-	// }
-
+	// set new rseed, split draw/calculation processes, begin
 	srand(time(NULL));
 	actionProc = fork();
 	if (actionProc == 0) 
 	{
 		initPlayField(FALSE);
-		actionPoll(rand() % FIELD_X, rand() % FIELD_Y, (short) rand() % 4);
-		exit(0);
+		actionPoll(rand() % winwidth, rand() % winheight, (short) rand() % 4);
 	} 
 	else 
 	{
 		set_timer(REFRESH_RATE);
-		while(1);
+		if (signal(GO_SIG, set_goflag) == SIG_ERR)
+			perror("Cannot trap child process signal");
+		while (!GAME_OVER);
+		// while((w = wait(&wstatus)) > 0);
+		timer_delete(timerid);
 	}
 
+	// cleanup
+	destroy_win(window);
 	munmap(field, sizeof(field));
-	nonblock(NB_DISABLE);	
+	nonblock(NB_DISABLE);
+	refresh();
 	endwin();
+
+	// system("reset");
 
 	return 0;
 }
