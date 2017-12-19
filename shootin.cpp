@@ -77,16 +77,16 @@ void *smallProjectile(void *cPVals)
 	switch (dir) 
 	{
 		case NORTH: 
-			limit = TEST_Y;
+			limit = TEST_Y + 1;
 			break;
 		case EAST: 
-			limit = TEST_X;
+			limit = TEST_X + 1;
 			break; 
 		case SOUTH: 
-			limit = 0; 
+			limit = -1; 
 			break; 
 		case WEST: 
-			limit = 0; 
+			limit = -1; 
 			break; 
 		default: 
 			perror("smallProjectile: switch(dir)");	
@@ -95,7 +95,7 @@ void *smallProjectile(void *cPVals)
 	
 	if (dir & 1) //WEST or EAST
 	{			
-		do
+		while ((x != limit) && !collision)
 		{ 
 			// clear former projectile location
 			field[COORD(y, x)] = ' ';
@@ -104,9 +104,8 @@ void *smallProjectile(void *cPVals)
 			field[COORD(y, x)] = '.';
 			usleep(PROJECTILE_SPEED);
 		}
-		while ((x != limit) && !collision);
 	} else {
-		do
+		while ((y != limit) && !collision)
 		{ 
 			field[COORD(y, x)] = ' ';
 			// 1: SOUTH 0: NORTH
@@ -114,7 +113,6 @@ void *smallProjectile(void *cPVals)
 			field[COORD(y, x)] = '.';
 			usleep(PROJECTILE_SPEED);
 		}
-		while ((y != limit) && !collision);
 	}
 
 	pthread_exit(NULL);
@@ -122,6 +120,7 @@ void *smallProjectile(void *cPVals)
 
 int collisionCheck(int x, int y, short dir)
 {
+	if (y == 0 && dir == NORTH) return 0; // memory protection to prevent SIGSEGV (exceptional case)
 	if (field[COORD_CHK(y, x, dir)] != ' ')
 		return 0;
 	return 1;
@@ -328,7 +327,7 @@ int main(int argc, char *argv[1])
 	// initiate ncurses values
 	cbreak();
 	keypad(window, TRUE);
-	echo(); // TODO: ...how in the hell does this work?????
+	noecho(); // TODO: ...how in the hell does this work?????
 	nonblock(NB_ENABLE);
 	refresh();
 
