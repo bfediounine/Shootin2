@@ -64,6 +64,11 @@ void set_timer(double nsecs)
 	timer_settime(timerid, 0, &timer, NULL);
 }
 
+int get_thread_number()
+{
+	return 0;
+}
+
 // Pass by value as character COORDinates mustn't be modified
 void *smallProjectile(void *cPVals) 
 {
@@ -170,9 +175,13 @@ void actionPoll(int startX, int startY, short startDir)
 					mainCharDir = EAST;
 					break;
 				case 'z':
+					// check thread count bounds
+					if (threadCount == MAX_PROJECTILE) break;
+
 					curPVals = (projectileVals *)
 						malloc(sizeof(projectileVals));
 					curPVals->dir = mainCharDir; 
+					curPVals->tnum = get_thread_number();
 					switch(mainCharDir) // slightly redundant initialization 
 					{
 						case NORTH:
@@ -196,10 +205,11 @@ void actionPoll(int startX, int startY, short startDir)
 							exit(1);
 							break;
 					}
-					if (pthread_create(&projectile[threadCount++],
+					if (pthread_create(&projectile[curPVals->tnum],
 						NULL, &smallProjectile,
 						(void *) curPVals) != 0)
 					{
+						threadCount++; // TODO mutex
 						perror("pthread_create() error");
 						exit(1);
 					}

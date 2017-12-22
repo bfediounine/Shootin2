@@ -14,6 +14,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "bintree.h" // used to store projectile IDs 
+
 #ifndef SHOOTIN_H_
 #define SHOOTIN_H_
 
@@ -44,6 +46,7 @@
 typedef struct projectileVals {
 	int x, y;
 	short dir;
+	int tnum; // thread number crucial in cleanup
 } projectileVals;
 
 WINDOW *window;
@@ -51,17 +54,26 @@ timer_t timerid; // window and matching refresh timer
 static u_char *field; // SHARED FIELD (between game loop and field draw)
 
 pid_t actionProc, w;
-pthread_t projectile[MAX_PROJECTILE];
 u_char GAME_OVER;
 int TEST_MUTABLE, wstatus; // mutable, test only; child status int
 
-int knhit();
+TreeNode rootThread;
+int get_thread_number();
+pthread_t projectile[MAX_PROJECTILE]; 
+int threadCount; // total thread quantity, modifiable by individual threads
+//
+extern int addNode(TreeNode, int);
+extern int remNode(TreeNode, int);
+extern int findParent(TreeNode, int);
+extern int searchNode(TreeNode, int);
+
+int kbhit();
 void nonblock(int);
 void *smallProjectile(void *);
 void actionPoll(int, int, short);
 void updateMainChar(int, int, int, int, short, short);
-void initPlayField(int map);
-void drawPlayField(int signum);
+void initPlayField(int);
+void drawPlayField(int);
 
 WINDOW *create_newwin(int, int, int, int);
 void destroy_win(WINDOW *);
