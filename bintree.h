@@ -1,5 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #ifndef BINTREE_H_
 #define BINTREE_H_
+
+#define TRUE	1
+#define FALSE	0
 
 typedef struct TreeNode
 {
@@ -7,9 +13,9 @@ typedef struct TreeNode
 	struct TreeNode *left, *right;
 }TreeNode;
 
-int addNode(TreeNode *, int);
-TreeNode *remNode(TreeNode *, int);
-TreeNode *findParent(TreeNode *, int);
-TreeNode *searchNode(TreeNode *, int);
+extern int addNode(TreeNode *, int);
+extern TreeNode *remNode(TreeNode *);
+extern TreeNode *findParent(TreeNode *, int);
+extern TreeNode *searchNode(TreeNode *, int);
 
 #endif

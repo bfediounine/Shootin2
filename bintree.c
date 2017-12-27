@@ -25,13 +25,13 @@ int addNode(TreeNode *curNode, int id)
 
 TreeNode *remNode(TreeNode *node)
 {
-	TreeNode *minRight, rVal; // use right side minimum in case of 2 child subs
+	TreeNode *minRight, *parRight, *rVal; // use right side minimum in case of 2 child subs
 	if (!node->left && !node->right)
 	{
 		free(node);
 		return NULL;
 	}
-	else if (!node->left |^ !node->right)
+	else if ((!node->left && node->right) || (node->left && !node->right))
 	{
 		rVal = (!node->left) ? node->right : node->left;
 		free(node);
@@ -47,9 +47,9 @@ TreeNode *remNode(TreeNode *node)
 			minRight = minRight->left;
 		}
 		// minRight and parent found - now mod and delete
-		node->id = minRight->id
+		node->id = minRight->id;
 		if (parRight == minRight)
-			node->right = minRight->right
+			node->right = minRight->right;
 		else
 			parRight->left = NULL;
 		free(minRight);
@@ -75,7 +75,7 @@ TreeNode *searchNode(TreeNode *curNode, int id)
 	if (curNode->id == id)
 		return curNode;
 	else if (curNode->id > id)
-		return (curNode->left != NULL) ? searchNode(curNode->left, curNode, id) : NULL;
+		return (curNode->left != NULL) ? searchNode(curNode->left, id) : NULL;
 	else
-		return (curNode->right != NULL) ? searchNode(curNode-right, curNode, id) : NULL;
+		return (curNode->right != NULL) ? searchNode(curNode->right, id) : NULL;
 }

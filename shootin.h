@@ -14,7 +14,10 @@
 #include <time.h>
 #include <unistd.h>
 
+extern "C" 
+{
 #include "bintree.h" // used to store projectile IDs 
+}
 
 #ifndef SHOOTIN_H_
 #define SHOOTIN_H_
@@ -57,15 +60,11 @@ pid_t actionProc, w;
 u_char GAME_OVER;
 int TEST_MUTABLE, wstatus; // mutable, test only; child status int
 
-TreeNode rootThread;
+TreeNode *rootThread;
 int get_thread_number();
 pthread_t projectile[MAX_PROJECTILE]; 
 int threadCount; // total thread quantity, modifiable by individual threads
 //
-extern int addNode(TreeNode, int);
-extern int remNode(TreeNode, int);
-extern int findParent(TreeNode, int);
-extern int searchNode(TreeNode, int);
 
 int kbhit();
 void nonblock(int);

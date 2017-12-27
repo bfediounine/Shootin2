@@ -66,12 +66,22 @@ void set_timer(double nsecs)
 
 int get_thread_number()
 {
-	return 0;
+	int tnum;
+	if (rootThread->id = -1) 
+	{
+		tnum = rand() % MAX_PROJECTILE;
+	rootThread->id = rand() % MAX_PROJECTILE;
+	}
+	else do tnum = rand() % MAX_PROJECTILE; while (!addNode(rootThread, tnum));
+	return tnum;
 }
 
 // Pass by value as character COORDinates mustn't be modified
 void *smallProjectile(void *cPVals) 
 {
+	TreeNode *parent, *child;
+	int tnum = ((projectileVals *) cPVals)->tnum;
+	////////
 	int x = ((projectileVals *) cPVals)->x, 
 		y = ((projectileVals *) cPVals)->y;
 	short dir = ((projectileVals *) cPVals)->dir;
@@ -118,6 +128,18 @@ void *smallProjectile(void *cPVals)
 			field[COORD(y, x)] = '.';
 			usleep(PROJECTILE_SPEED);
 		}
+	}
+
+	// deallocate resources 
+	if (rootThread->id == tnum)
+		rootThread->id = -1;
+	else
+	{
+		parent = findParent(rootThread, tnum);
+		if (parent->left && parent->left->id == tnum)
+			parent->left = remNode(parent->left);
+		else 
+			parent->right = remNode(parent->right);
 	}
 
 	pthread_exit(NULL);
@@ -349,6 +371,10 @@ int main(int argc, char *argv[1])
 			-1, 0);
 	memset(field, ' ', (size_t) fieldsize);
 
+	// set root for thread managment
+	rootThread = (TreeNode *) malloc(sizeof(TreeNode));
+	rootThread->id = -1; 
+		
 	// set new rseed, split draw/calculation processes, begin
 	srand(time(NULL));
 	actionProc = fork();
