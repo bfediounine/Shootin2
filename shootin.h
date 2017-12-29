@@ -62,6 +62,7 @@ int TEST_MUTABLE, wstatus; // mutable, test only; child status int
 
 TreeNode *rootThread;
 int get_thread_number();
+pthread_mutex_t proj_mutex; // mutex for projectile bintree
 pthread_t projectile[MAX_PROJECTILE]; 
 int threadCount; // total thread quantity, modifiable by individual threads
 //

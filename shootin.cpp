@@ -67,12 +67,17 @@ void set_timer(double nsecs)
 int get_thread_number()
 {
 	int tnum;
-	if (rootThread->id = -1) 
+	// must use mutex when altering thread bintree
+	pthread_mutex_lock(&proj_mutex); // blocking
+
+	if (rootThread->id == -1) 
 	{
 		tnum = rand() % MAX_PROJECTILE;
-	rootThread->id = rand() % MAX_PROJECTILE;
+		rootThread->id = tnum;
 	}
 	else do tnum = rand() % MAX_PROJECTILE; while (!addNode(rootThread, tnum));
+	pthread_mutex_unlock(&proj_mutex);
+
 	return tnum;
 }
 
@@ -92,10 +97,10 @@ void *smallProjectile(void *cPVals)
 	switch (dir) 
 	{
 		case NORTH: 
-			limit = TEST_Y + 1;
+			limit = TEST_Y - 1;
 			break;
 		case EAST: 
-			limit = TEST_X + 1;
+			limit = TEST_X - 1;
 			break; 
 		case SOUTH: 
 			limit = -1; 
@@ -130,6 +135,7 @@ void *smallProjectile(void *cPVals)
 		}
 	}
 
+	pthread_mutex_lock(&proj_mutex); // lock or break until lock free
 	// deallocate resources 
 	if (rootThread->id == tnum)
 		rootThread->id = -1;
@@ -141,6 +147,7 @@ void *smallProjectile(void *cPVals)
 		else 
 			parent->right = remNode(parent->right);
 	}
+	pthread_mutex_unlock(&proj_mutex);
 
 	pthread_exit(NULL);
 }
@@ -283,10 +290,10 @@ void initPlayField(int map)
 	switch (map) 
 	{
 		case FALSE: // TEST MAP		
-			for ( ; i < TEST_X; i++)
-				field[COORD(TEST_Y - 1, i)] = '-'; 
-			for ( ; j < TEST_Y; j++)
-				field[COORD(j, TEST_X - 1)] = '-';
+			// for ( ; i < TEST_X; i++)
+			// 	field[COORD(TEST_Y - 1, i)] = '-'; 
+			// for ( ; j < TEST_Y; j++)
+			// 	field[COORD(j, TEST_X - 1)] = '-';
 			break;
 		default:
 			break;
@@ -373,7 +380,11 @@ int main(int argc, char *argv[1])
 
 	// set root for thread managment
 	rootThread = (TreeNode *) malloc(sizeof(TreeNode));
+	rootThread->left = NULL;
+	rootThread->right = NULL;
 	rootThread->id = -1; 
+	// ...and the corresponding mutex
+	pthread_mutex_init(&proj_mutex, NULL);
 		
 	// set new rseed, split draw/calculation processes, begin
 	srand(time(NULL));
@@ -394,6 +405,7 @@ int main(int argc, char *argv[1])
 	}
 
 	// cleanup
+	pthread_mutex_destroy(&proj_mutex);
 	destroy_win(window);
 	munmap(field, sizeof(field));
 	nonblock(NB_DISABLE);

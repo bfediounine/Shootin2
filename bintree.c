@@ -8,6 +8,8 @@ int addNode(TreeNode *curNode, int id)
 		if (curNode->left == NULL)
 		{
 			curNode->left = (TreeNode *) malloc(sizeof(TreeNode));
+			curNode->left->left = NULL;
+			curNode->left->right = NULL;
 			curNode->left->id = id;
 		}
 		else 
@@ -16,6 +18,8 @@ int addNode(TreeNode *curNode, int id)
 		if (curNode->right == NULL)
 		{
 			curNode->right = (TreeNode *) malloc(sizeof(TreeNode));
+			curNode->right->left = NULL;
+			curNode->right->right = NULL;
 			curNode->right->id = id;
 		}
 		else 
