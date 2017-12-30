@@ -97,13 +97,13 @@ void *smallProjectile(void *cPVals)
 	switch (dir) 
 	{
 		case NORTH: 
-			limit = TEST_Y - 1;
+			limit = -1;
 			break;
 		case EAST: 
 			limit = TEST_X - 1;
 			break; 
 		case SOUTH: 
-			limit = -1; 
+			limit = TEST_Y - 1;
 			break; 
 		case WEST: 
 			limit = -1; 
@@ -115,21 +115,23 @@ void *smallProjectile(void *cPVals)
 	
 	if (dir & 1) //WEST or EAST
 	{			
-		while ((x != limit) && !collision)
+		while (TRUE)
 		{ 
 			// clear former projectile location
 			field[COORD(y, x)] = ' ';
 			// 1: WEST, 0: EAST 
 			x = (dir & 2) ? x - 1 : x + 1; 
+			if ((x == limit) || collision) break;
 			field[COORD(y, x)] = '.';
 			usleep(PROJECTILE_SPEED);
 		}
 	} else {
-		while ((y != limit) && !collision)
+		while (TRUE)
 		{ 
 			field[COORD(y, x)] = ' ';
 			// 1: SOUTH 0: NORTH
 			y = (dir & 2) ? y + 1 : y - 1; 
+			if ((y == limit) || collision) break;
 			field[COORD(y, x)] = '.';
 			usleep(PROJECTILE_SPEED);
 		}
